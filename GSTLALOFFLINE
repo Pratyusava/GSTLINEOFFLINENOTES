@@ -1,0 +1,74 @@
+CLONING GSTLAL AND SUBMITTING DAGS
+
+1. CREATING A SINGULARITY CONTAINER
+singularity build --sandbox --fix-perms <image-name> docker://containers.ligo.org/lscsoft/gstlal:o4-early-warning
+(Replace <image-name> with the path where you want to store the container)
+
+2. CLONE GSTLAL
+git clone git@git.ligo.org:lscsoft/gstlal.git 
+	a. Checkout to the branch you want to work on.
+	Example: git git checkout o4-early-warning
+		 git checkout -b min_snr 
+
+3. INSTALL PATCHES IF REQUIRED
+Example: git apply --check 171.patch
+         git apply 171.patch
+
+4. ENTER SINGULARITY
+singularity run --writable  <image>
+
+5. RUN ./configure --prefix /usr --without-doxygen 
+
+6. IN THE DIRECTORY WHERE GSTLAL IS CLONED, YOU SHALL FIND 4 FILES NAMED gstlal, gstlal-ugly, gstlal-burst, gstlal-inspiral. ENTER EACH OF THEM AND MAKE THE FOLLOWING CHANGES.
+./00init.sh
+./configure --prefix /usr --without-doxygen
+make
+make install
+
+7. COPY ALL THE STUFF YOU NEED. MAKE THE .sh FILE.
+Example: cp -r <PATH>/bank .
+	 cp -r <PATH>//mass-model .
+	 cp -r <PATH>//dtdphi .
+	 cp <PATH>/config.yml .
+	 cp <PATH>//bns_astro* .
+	 cp <PATH>/frame.cache .
+	 cp <PATH>/49 make_segs_vetoes.sh .
+	 sh make_segs_vetos.sh
+	 
+8. SET UP THE REMAINING WORKFLOW FOLLOWING https://lscsoft.docs.ligo.org/gstlal/cbc_analysis.html. YOU NEED TO SET UP YOUR GRID PROFILE, MAKE A PROXY, MAKE THE DAGS AND LAUNCH THEM.
+
+9. YOU ARE ALL SET!! GOOD LUCK :-)
+
+SOME ISSUES I FACED WHILE RUNNING THE DAGS
+
+1. Jobs fail randomly, with no proper error message. The easiest way to fix this is to remove the dags and resubmit it.
+
+2. Towards the end you might get failures with disk is full errors. To fix it:
+	a. ENTER THE HEAD NODE BY $singularity run <image>
+	b. FIND A FAILING JOB FROM THE full_inspiral_dag.sh FILE UNDER THE SINGULARITY ENVIRONMENT. IF IT RUNS SMOOTHLY COME OUT OF SINGULARITY AND MAKE THE FOLLOWING CHANGES TO THE CORRESPONDING .sub FILE.
+		i. Change Universe from 'vanilla' to 'local'.
+		ii. REMOVE periodic_release = (HoldReasonCode == 5)
+			   request_cpus = 1
+		           request_memory = 50000
+			   requirements = has_avx2 && (CpuFamily =?= 6) && (HAS_SINGULARITY=?=True)
+	        iii. Remove your dags and resubmit.
+	
+3. Jobs running perfectly on the head node but the steps on 2b doesn't work. Then just manually run the jobs from the head node.
+
+The notes have been compiled from instructions given by Dr. Surabhi Sachdev while doing preo4 early warning analysis.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
