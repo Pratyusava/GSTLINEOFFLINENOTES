@@ -4,11 +4,14 @@ CLONING GSTLAL AND SUBMITTING DAGS
 singularity build --sandbox --fix-perms <image-name> docker://containers.ligo.org/lscsoft/gstlal:o4-early-warning
 (Replace <image-name> with the path where you want to store the container)
 
-2. CLONE GSTLAL
+2. CLONE GSTLAL (if you need to make changes to singularity image)
 git clone git@git.ligo.org:lscsoft/gstlal.git 
 	a. Checkout to the branch you want to work on.
-	Example: git git checkout o4-early-warning
-		 git checkout -b min_snr 
+	Example: git checkout o4-early-warning
+		 git checkout -b min_snr (create a new branch to make and commit changes)
+		 Make changes
+		 git add
+		 git commit
 
 3. INSTALL PATCHES IF REQUIRED
 Example: git apply --check 171.patch
@@ -51,6 +54,8 @@ SOME ISSUES I FACED WHILE RUNNING THE DAGS
 			   request_cpus = 1
 		           request_memory = 50000
 			   requirements = has_avx2 && (CpuFamily =?= 6) && (HAS_SINGULARITY=?=True)
+			   transfer_executable = False   
+			   request_disk = 4GB
 	        iii. Remove your dags and resubmit.
 	
 3. Jobs running perfectly on the head node but the steps on 2b doesn't work. Then just manually run the jobs from the head node.
